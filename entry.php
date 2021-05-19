@@ -1,6 +1,33 @@
 <?php
 session_start();
 include("connection.php");
+
+if(isset($_POST["submit"])){
+
+    $courseid = mysqli_real_escape_string ($conn, $_POST["courseid"]);
+    $dayid = $_POST["days"];
+    $starts = $_POST["starts"];
+    $ends = $_POST["ends"];
+    $roomid = $_POST["room"];
+
+    $query = "INSERT INTO schedules(CourseID,DayID,Starts,Ends,termID,roomid) VALUES ('$courseid','$dayid','$starts','$ends','1','$roomid')";
+    $result = mysqli_query($conn,$query);
+    if($result){
+        $msg = "
+    <div class='alert alert-success'>
+    <a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+    <b>Course added successfuly</b>
+    </div>
+    ";
+    }else{
+    $msg = "
+    <div class='alert alert-warning'>
+    <a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a>
+    <b>Invalid Email or password</b>
+    </div>
+    ";
+    }
+}
 ?>
 <html>
 
@@ -59,17 +86,16 @@ include("connection.php");
                 <div class="row  border-bottom white-bg dashboard-header">
 
                     <div class="col-md-6">
-                        <h2>Welcome to: <?php 
+                        <h2>Courses <?php 
                         $persnal = "SELECT * FROM semesters WHERE status='1'";
                         $exec = mysqli_query($conn,$persnal); 
                         while($row = mysqli_fetch_array($exec)){
-                            echo $row["name"]."  ".$row["year"];
+                              $row["name"]."  ".$row["year"];
                             $term = $row["SemID"];
                             $_SESSION["term"] = $term;
                         }
                         
-                        ?></h2>
-                        <small>You have 42 messages and 6 notifications.</small>
+                        ?></h2> 
                         
                     </div> 
 
@@ -79,57 +105,119 @@ include("connection.php");
                 <div class="col-lg-12">
                 <div class="ibox ">
                     <div class="ibox-title">
-                        <h5>Semester Schedule entries</h5>
-                        
+                        <h5>Add New schedule</h5> 
                     </div>
                     
                     <div class="ibox-content">
-                    <a class="btn btn-primary float-right" style="margin-bottom:20px;margin-right:20px" href="entry">New schedule entry</a>
-                    
-                    <div class="table-responsive">
-                    <table class="table table-striped table-bordered table-hover dataTables-example" >
-                    <thead>
-                    <tr>
-                        <th>Schedule ID</th>
-                        <th>Course</th>
-                        <th>Day(s)</th>
-                        <th>Start (h)</th>
-                        <th>Ends (h)</th>
-                        <th>Room</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php
-                    $tid = $_SESSION["term"];
-                    $query = "SELECT * FROM schedules WHERE termID = '$tid'";
-                    $result = mysqli_query($conn,$query);
-                    while ($rows = mysqli_fetch_array($result)) {?>
-                    <tr class="gradeX">
-                        <td><?php echo $rows["ScheduleID"]?></td>
-                        <td><?php $course =  $rows["CourseID"];
-                        $querycour = "SELECT * FROM courses WHERE CourseID = '$course'";
-                        $resultcour = mysqli_query($conn,$querycour);
-                        $cour = mysqli_fetch_array($resultcour);
-                        echo $cour[1];
-                        ?></td>
-                        <td><?php $day =  $rows["DayID"];
-                         $queryday = "SELECT * FROM dailytime WHERE DayID = '$day'";
-                         $resultday = mysqli_query($conn,$queryday);
-                         $days = mysqli_fetch_array($resultday);
-                         echo $days[1];
-                        ?></td>
-                        <td><?php echo $rows["Starts"]?></td>
-                        <td><?php echo $rows["Ends"]?></td>
-                        <td><?php $day =  $rows["roomid"];
-                         $queryday = "SELECT * FROM rooms WHERE RoomId = '$day'";
-                         $resultday = mysqli_query($conn,$queryday);
-                         $days = mysqli_fetch_array($resultday);
-                         echo $days[1];
-                        ?></td>
-                    </tr>
-                    <?php } ?>
-                     </table>
+                    <div class="row">
+            <div class="col-lg-7">
+                <div class="ibox ">
+                    <div class="ibox-title">
+                        <h5>Fill this form below</h5>
+                         
+                    </div>
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-sm-12"> 
+                                    <div class='message-info'>
+                                    <?php if ($msg != "") echo $msg . "<br>" ?>
+                                    </div>
+                                <form role="form" action="entry" method="POST">
+                                <div class="form-group"><label>Course Name</label>
+                                <select class="form-control m-b" name="courseid">
+                                        <?php
+                                         $query = "SELECT * FROM courses";
+                                         $result = mysqli_query($conn,$query);
+                                         while ($rows = mysqli_fetch_array($result)) {?>
+                                        <option value="<?php echo $rows[0];?>"><?php echo $rows[1]?></option>
+                                        <?php } ?>
+                                        ?>
+                                    </select>
+                                    </div>
+                                    <div class="form-group"><label>Day</label>  
+                                    <select class="form-control m-b" name="days">
+                                        <?php
+                                         $query = "SELECT * FROM dailytime";
+                                         $result = mysqli_query($conn,$query);
+                                         while ($rows = mysqli_fetch_array($result)) {?>
+                                        <option value="<?php echo $rows[0];?>"><?php echo $rows[1]?></option>
+                                        <?php } ?>
+                                        ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group"><label>Starts</label> <input type="time" name="starts" placeholder="start time" class="form-control"></div>
+                                    <div class="form-group"><label>Ends</label> <input type="time" name="ends" placeholder="end time" class="form-control"></div>
+                                    <div class="form-group"><label>Room</label>  
+                                    <select class="form-control m-b" name="room">
+                                        <?php
+                                         $query = "SELECT * FROM rooms";
+                                         $result = mysqli_query($conn,$query);
+                                         while ($rows = mysqli_fetch_array($result)) {?>
+                                        <option value="<?php echo $rows[0];?>"><?php echo $rows[1]?></option>
+                                        <?php } ?>
+                                        ?>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-primary float-right m-t-n-xs" type="submit" name="submit"><strong>Add course</strong></button>
+                                     </div>
+                                </form>
+                            </div> 
                         </div>
+                    </div>
+                </div>
+            </div>
+            <!--
+                <div class="col-lg-5">
+                    <div class="ibox ">
+                        <div class="ibox-title">
+                            <h5>Horizontal form</h5>
+                            <div class="ibox-tools">
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                    <i class="fa fa-wrench"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-user">
+                                    <li><a href="#" class="dropdown-item">Config option 1</a>
+                                    </li>
+                                    <li><a href="#" class="dropdown-item">Config option 2</a>
+                                    </li>
+                                </ul>
+                                <a class="close-link">
+                                    <i class="fa fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ibox-content">
+                            <form>
+                                <p>Sign in today for more expirience.</p>
+                                <div class="form-group row"><label class="col-lg-2 col-form-label">Email</label>
+
+                                    <div class="col-lg-10"><input type="email" placeholder="Email" class="form-control"> <span class="form-text m-b-none">Example block-level help text here.</span>
+                                    </div>
+                                </div>
+                                <div class="form-group row"><label class="col-lg-2 col-form-label">Password</label>
+
+                                    <div class="col-lg-10"><input type="password" placeholder="Password" class="form-control"></div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <div class="i-checks"><label> <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div> Remember me </label></div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button class="btn btn-sm btn-white" type="submit">Sign in</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                    -->
+            </div>
 
                     </div>
                 </div>
